@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Campus Event Management System</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                font-family: "Poppins";
+            }
+
+            body {
+                background-color: purple;
+            }
+
+            .header {
+                padding-block: 20px;
+                text-align: center;
+                color: white;
+            }
+
+            main {
+                padding-inline: 40px;
+            }
+
+            main > h2 {
+                color: white;
+            }
+
+            .container {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .add-event-container {
+                background-color: white;
+            }
+
+            .add-event-container {
+                padding: 40px;
+                height: max-content;
+            }
+
+            .add-event-container h3 {
+                text-align: center;
+            }
+
+            .event-form-container > form div > input {
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 10px;
+            }
+
+            .btn-add-event,
+            .btn-register {
+                outline: none;
+                border: none;
+                width: 100%;
+                padding: 8px;
+                color: white;
+                background-color: purple;
+                cursor: pointer;
+            }
+
+            .event-list-container > h2 {
+                color: white;
+                padding-block: 5px;
+            }
+
+            .event-lists {
+                padding-right: 16px;
+                height: 500px;
+                overflow-y: auto;
+            }
+
+            .event-item {
+                list-style-type: none;
+                margin-bottom: 10px;
+                padding: 20px;
+                background-color: white;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .event-item > div:first-child div {
+                margin-top: 30px;
+            }
+
+            .event-header {
+                font-weight: 500;
+                font-size: 24px;
+            }
+
+            .registration-header {
+                font-size: 18px;
+                color: purple;
+            }
+
+            .registration-container input {
+                padding: 4px;
+            }
+
+            .registration-container div {
+                margin-bottom: 7px;
+            }
+
+            .event-item p {
+                font-weight: 400;
+                font-size: 16px;
+            }
+
+            .modal {
+                display: none; /* Initially hidden */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(
+                    0,
+                    0,
+                    0,
+                    0.7
+                ); /* Semi-transparent background */
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+
+            .modal-content {
+                background-color: white;
+                padding: 20px;
+                width: 80%;
+                height: 400px;
+                max-width: 600px;
+                max-height: 80%;
+                overflow-y: auto;
+                position: relative;
+            }
+
+            .close-btn {
+                position: absolute;
+                top: 0;
+                right: 12px;
+                font-size: 30px;
+                cursor: pointer;
+            }
+
+            .attendees-lists {
+                list-style-type: none;
+                padding: 0;
+            }
+
+            .attendees-lists li {
+                padding: 8px;
+                margin: 5px 0;
+                background-color: #f1f1f1;
+                border-radius: 5px;
+            }
+
+            @media screen and (min-width: 900px) {
+                .container {
+                    flex-direction: row;
+                }
+
+                .add-event-container {
+                    width: 30%;
+                }
+
+                .event-list-container {
+                    padding-inline: 20px;
+                    width: 70%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1 class="header">Campus Event Management System</h1>
+
+        <main>
+            <h2>Events</h2>
+            <div class="container">
+                <div class="add-event-container">
+                    <h3>Add Event</h3>
+                    <div class="event-form-container">
+                        <form>
+                            <div>
+                                <label for="title">Event Title</label> <br />
+                                <input
+                                    id="title"
+                                    type="text"
+                                    placeholder="Title"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label for="date">Event Date</label> <br />
+                                <input id="date" type="date" min="2025-04-9" required />
+                            </div>
+                            <div>
+                                <label for="organizer">Event Organizer</label>
+                                <br />
+                                <input
+                                    id="organizer"
+                                    type="text"
+                                    placeholder="Organizer"
+                                    required
+                                />
+                            </div>
+                            <button class="btn-add-event">Add Event</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="event-list-container">
+                    <ul class="event-lists"></ul>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            let addEventHeader = document.querySelector(
+                ".add-event-container > h3"
+            );
+            let btnAddEvent =
+                document.getElementsByClassName("btn-add-event")[0];
+            let eventItems = document.querySelectorAll(".event-item > *");
+            let eventId = 0;
+
+            function displayEvents() {
+                let eventLists = document.querySelector(".event-lists");
+
+                fetch("http://localhost:3000/events")
+                    .then((response) => response.json())
+                    .then((data) => {
+                        data.forEach((item) => {
+                            let event = document.createElement("li");
+                            event.className = "event-item";
+                            event.dataset.id = item.id;
+
+                            event.innerHTML = `
+                                <div>
+                                    <h2 class='event-header'>${item.title}</h2>
+                                    <p>Date: ${item.date}</p>
+                                    <p>Organizer: ${item.organizer}</p>
+                                    <div>
+                                        <button class="btn-view-attendees">View Attendees</button>
+                                        <button class="btn-edit-event">Edit</button>
+                                        <button class="btn-delete-event">Delete</button>
+                                    </div>
+                                </div>
+                                <div class='registration-container'>
+                                    <h2 class='registration-header'>Register a User</h2>
+                                    <form>
+                                        <div>
+                                            <input id='name' type="text" placeholder="Name" />
+                                        </div>
+                                        <div>
+                                            <input id='email' type="email" placeholder="Email" />
+                                        </div>
+                                        <button class="btn-register">Register</button>
+                                    </form>
+                                </div>
+                            `;
+
+                            eventLists.append(event);
+                        });
+
+                        // Now attach event listeners to the dynamically created anchor tags
+                        let btnViewAttendees = document.querySelectorAll(
+                            ".btn-view-attendees"
+                        );
+                        let btnViewDetails =
+                            document.querySelectorAll(".btn-view-details");
+                        let btnEdit =
+                            document.querySelectorAll(".btn-edit-event");
+                        let btnDelete =
+                            document.querySelectorAll(".btn-delete-event");
+                        let btnRegister =
+                            document.querySelectorAll(".btn-register");
+
+                        btnViewAttendees.forEach((btn) => {
+                            btn.addEventListener("click", function (event) {
+                                event.preventDefault();
+                                let id = getIndex(btn);
+
+                                getAttendeesLists(id);
+                            });
+                        });
+
+                        btnViewDetails.forEach((btn) => {
+                            btn.addEventListener("click", function (event) {
+                                event.preventDefault();
+                                let id = getIndex(btn);
+
+                                getAttendeesLists(id);
+                            });
+                        });
+
+                        btnEdit.forEach((btn) => {
+                            btn.addEventListener("click", function (event) {
+                                event.preventDefault();
+
+                                addEventHeader.textContent = "Edit Event";
+                                btnAddEvent.textContent = "Save Changes";
+
+                                let id = getIndex(btn);
+                                getEventDetails(id);
+                                eventId = id;
+                            });
+                        });
+
+                        btnDelete.forEach((btn) => {
+                            btn.addEventListener("click", function (event) {
+                                event.preventDefault();
+                                let id = getIndex(btn);
+
+                                deleteEvent(id);
+                            });
+                        });
+
+                        btnRegister.forEach((btn) => {
+                            btn.addEventListener("click", function (event) {
+                                event.preventDefault();
+                                let id = getIndex(btn);
+
+                                registerUser(id);
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.log("Error: ", error);
+                    });
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                displayEvents(); // This will display events and set up event listeners
+            });
+
+            // Function to get attendees and show them in a modal
+            function getAttendeesLists(eventId) {
+                // Create modal elements
+                let modal = document.createElement("div");
+                modal.className = "modal";
+
+                let modalContent = document.createElement("div");
+                modalContent.className = "modal-content";
+
+                // Close button
+                let closeButton = document.createElement("span");
+                closeButton.className = "close-btn";
+                closeButton.textContent = "x"; // Close symbol
+                closeButton.addEventListener("click", () => {
+                    modal.style.display = "none"; // Hide modal when close button is clicked
+                });
+
+                // Create the list for attendees
+                let attendeesContainer = document.createElement("div");
+                let attendeesLists = document.createElement("ul");
+                attendeesLists.classList = "attendees-lists";
+
+                let attendeesHeader = document.createElement("h3");
+                attendeesHeader.textContent = "Attendees Lists";
+                attendeesHeader.style.textAlign = "center";
+
+                fetch(`http://localhost:3000/registration/${eventId}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        data.forEach((item) => {
+                            let user = document.createElement("li");
+
+                            user.innerHTML = `<p>${item.name}</p>`;
+                            attendeesLists.append(user);
+                        });
+                    })
+                    .catch((error) => {
+                        console.log("Error: ", error);
+                    });
+
+                attendeesContainer.append(attendeesLists);
+
+                // Append close button and attendee lists to modal content
+                modalContent.append(attendeesHeader);
+                modalContent.append(closeButton);
+                modalContent.append(attendeesContainer);
+
+                // Append modal content to modal
+                modal.append(modalContent);
+
+                // Append the modal to the body
+                document.body.append(modal);
+
+                // Display the modal (lightbox)
+                modal.style.display = "flex"; // Show modal
+            }
+
+            function addEvent() {
+                let titleInput = document.getElementById("title").value;
+                let dateInput = document.getElementById("date").value;
+                let organizerInput = document.getElementById("organizer").value;
+
+                fetch("http://localhost:3000/events", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        title: titleInput,
+                        date: dateInput,
+                        organizer: organizerInput,
+                        attendees: [],
+                    }),
+                })
+                    .then((response) => response.text())
+                    .then((data) => {
+                        console.log("Success:", data);
+                    });
+            }
+
+            function updateEvent(id) {
+                let titleInput = document.getElementById("title");
+                let dateInput = document.getElementById("date");
+                let organizerInput = document.getElementById("organizer");
+
+                fetch(`http://localhost:3000/events/${id}`, {
+                    method: "PUT", // Use PUT or PATCH for updates
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        titleValue: titleInput.value,
+                        dateValue: dateInput.value,
+                        organizerValue: organizerInput.value,
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log("Server response:", data);
+                        alert("Data updated!");
+                    })
+                    .catch((error) => {
+                        console.error("Error updating data:", error);
+                    });
+            }
+
+            function deleteEvent(id) {
+                fetch(`http://localhost:3000/events/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            return response.text().then((text) => {
+                                throw new Error(text);
+                            });
+                        }
+                        return response.text();
+                    })
+                    .then((data) => {
+                        console.log("Success:", data);
+                    })
+                    .catch((error) => {
+                        console.error("Error updating data:", error.message);
+                    });
+            }
+            
+            function getEventDetails(id) {
+                let titleInput = document.getElementById("title");
+                let dateInput = document.getElementById("date");
+                let organizerInput = document.getElementById("organizer");
+
+                fetch(`http://localhost:3000/events/${id}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        titleInput.value = data.title;
+                        dateInput.value = data.date;
+                        organizerInput.value = data.organizer;
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching user:", error);
+                    });
+            }
+
+            function registerUser(id) {
+                let nameInput = document.getElementById("name");
+                let emailInput = document.getElementById("email");
+
+                fetch("http://localhost:3000/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        eventId: id,
+                        name: nameInput.value,
+                        email: emailInput.value,
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log("Success:", data);
+                    });
+            }
+
+            function getIndex(btn) {
+                let parent = btn.parentElement;
+                let parentContainer = parent.parentElement;
+                let root = parentContainer.parentElement;
+                let id = root.dataset.id;
+
+                return id;
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                btnAddEvent.addEventListener("click", () => {
+                    if (btnAddEvent.textContent === "Add Event") {
+                        addEvent();
+                    } else if (btnAddEvent.textContent === "Save Changes") {
+                        updateEvent(eventId);
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
