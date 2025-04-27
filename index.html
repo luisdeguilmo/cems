@@ -43,12 +43,9 @@
             }
 
             .add-event-container {
-                background-color: white;
-            }
-
-            .add-event-container {
-                padding: 40px;
                 height: max-content;
+                padding: 40px;
+                background-color: white;
             }
 
             .add-event-container h3 {
@@ -195,7 +192,8 @@
                     <div class="event-form-container">
                         <form>
                             <div>
-                                <label for="title">Event Title</label> <br />
+                                <label for="title">Event Title</label>
+                                <br />
                                 <input
                                     id="title"
                                     type="text"
@@ -205,10 +203,12 @@
                             </div>
                             <div>
                                 <label for="date">Event Date</label> <br />
-                                <input id="date" type="date" min="2025-04-9" required />
+                                <input id="date" type="date" required />
                             </div>
                             <div>
-                                <label for="organizer">Event Organizer</label>
+                                <label for="organizer"
+                                    >Event Organizer</label
+                                >
                                 <br />
                                 <input
                                     id="organizer"
@@ -220,7 +220,7 @@
                             <button class="btn-add-event">Add Event</button>
                         </form>
                     </div>
-                </div>
+                </div>                   
 
                 <div class="event-list-container">
                     <ul class="event-lists"></ul>
@@ -232,6 +232,8 @@
             let addEventHeader = document.querySelector(
                 ".add-event-container > h3"
             );
+            let dateInput = document.getElementById("date");
+            dateInput.min = new Date().toISOString().split("T")[0]; // Set minimum date to today
             let btnAddEvent =
                 document.getElementsByClassName("btn-add-event")[0];
             let eventItems = document.querySelectorAll(".event-item > *");
@@ -326,6 +328,7 @@
                                 let id = getIndex(btn);
 
                                 deleteEvent(id);
+                                location.reload(); 
                             });
                         });
 
@@ -333,8 +336,12 @@
                             btn.addEventListener("click", function (event) {
                                 event.preventDefault();
                                 let id = getIndex(btn);
+                                let name = btn.parentElement.querySelector('#name');
+                                let email = btn.parentElement.querySelector('#email');
 
-                                registerUser(id);
+                                registerUser(id, name.value, email.value);
+                                name.value = ""; 
+                                email.value = "";
                             });
                         });
                     })
@@ -475,7 +482,7 @@
                         console.error("Error updating data:", error.message);
                     });
             }
-            
+
             function getEventDetails(id) {
                 let titleInput = document.getElementById("title");
                 let dateInput = document.getElementById("date");
@@ -493,10 +500,7 @@
                     });
             }
 
-            function registerUser(id) {
-                let nameInput = document.getElementById("name");
-                let emailInput = document.getElementById("email");
-
+            function registerUser(id, name, email) { 
                 fetch("http://localhost:3000/register", {
                     method: "POST",
                     headers: {
@@ -504,13 +508,13 @@
                     },
                     body: JSON.stringify({
                         eventId: id,
-                        name: nameInput.value,
-                        email: emailInput.value,
+                        name: name,
+                        email: email,
                     }),
                 })
                     .then((response) => response.json())
                     .then((data) => {
-                        console.log("Success:", data);
+                        alert(data.message); // Show success or error message nicely
                     });
             }
 
