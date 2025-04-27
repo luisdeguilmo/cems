@@ -4,6 +4,7 @@ import { events } from '../routes/events.js';
 const router = express.Router();
 let users = []; 
 
+// Retrieve all attendees for a specific event 
 router.get("/:eventId", (req, res) => {
     const { eventId } = req.params;
 
